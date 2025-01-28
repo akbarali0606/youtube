@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Video Qidiruvi</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+      }
+      header {
+        border-radius: 10px;
+        background-color: #333;
+        color: white;
+        padding: 20px;
+      }
+      #searchInput {
+        padding: 10px;
+        width: 300px;
+        margin: 10px 0;
+      }
+      button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 15px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #videoResults {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      .video-item {
+        margin: 10px;
+        width: 300px;
+      }
+      iframe {
+        width: 100%;
+        height: 200px;
+      }
+      span {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>You<span>Tube</span> Video Qidiruvi</h1>
+      <input type="text" id="searchInput" placeholder="Video qidiring..." />
+      <br />
+      <button onclick="searchVideos()">Qidirish</button>
+    </header>
+
+    <section id="videoResults">
+      <!-- YouTube videolari shu yerda ko'rsatiladi -->
+    </section>
+
+    <script>
+      const API_KEY = "AIzaSyAiykMzqFz8jnhktDFfHQXzD6OPiE1XA80";
+      let players = []; // Yangi qo'shilgan o'yinchilar ro'yxati
+
+      function searchVideos() {
+        const searchQuery = document.getElementById("searchInput").value;
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=video&key=${API_KEY}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const resultsContainer = document.getElementById("videoResults");
+            resultsContainer.innerHTML = ""; // Tozalash
+            players = []; // Yangi qidiruv uchun eski pleerlarni tozalash
+
+            // Videolarni chiqarish
+            data.items.forEach((item, index) => {
+              const videoElement = document.createElement("div");
+              videoElement.classList.add("video-item");
+
+              const videoTitle = document.createElement("h3");
+              videoTitle.innerText = item.snippet.title;
+
+              const videoPlayer = document.createElement("div");
+              videoPlayer.setAttribute("id", `player-${index}`); // Har bir videoga alohida ID
+
+              videoElement.appendChild(videoTitle);
+              videoElement.appendChild(videoPlayer);
+              resultsContainer.appendChild(videoElement);
+
+              // Yangi YouTube Player API orqali pleerni yaratish
+              const player = new YT.Player(`player-${index}`, {
+                height: "200",
+                width: "300",
+                videoId: item.id.videoId,
+                events: {
+                  onStateChange: onPlayerStateChange,
+                },
+              });
+
+              players.push(player); // Pleerni ro'yxatga qo'shish
+            });
+          })
+          .catch((error) =>
+            console.error("Error fetching YouTube data:", error)
+          );
+      }
+
+      function onPlayerStateChange(event) {
+        // Agar video ijro etilayotgan bo'lsa, boshqa videolarni to'xtatish
+        if (event.data === YT.PlayerState.PLAYING) {
+          players.forEach((player) => {
+            if (player !== event.target) {
+              player.pauseVideo(); // Boshqa pleerlarni pauza qilish
+            }
+          });
+        }
+      }
+
+      // YouTube IFrame API-ni yuklash
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+  </body>
+</html>
